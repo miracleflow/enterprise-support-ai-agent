@@ -56,7 +56,7 @@ parameters:
       en_US: Number of columns to add, range (0-5000].
       zh_Hans: 要增加的列数，范围(0-5000]。
     llm_description: 要增加的列数，范围(0-5000]。
-    form: llm
+    form: form
 
   - name: values
     type: string
