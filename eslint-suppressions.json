@@ -202,11 +202,6 @@
       "count": 1
     }
   },
-  "web/app/components/app-sidebar/dataset-info/dropdown.tsx": {
-    "ts/no-explicit-any": {
-      "count": 1
-    }
-  },
   "web/app/components/app-sidebar/index.tsx": {
     "ts/no-explicit-any": {
       "count": 1
@@ -1158,7 +1153,7 @@
   },
   "web/app/components/base/form/components/base/base-field.tsx": {
     "no-restricted-imports": {
-      "count": 2
+      "count": 1
     },
     "ts/no-explicit-any": {
       "count": 3
@@ -1904,25 +1899,6 @@
   "web/app/components/base/search-input/index.stories.tsx": {
     "no-console": {
       "count": 3
-    },
-    "ts/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "web/app/components/base/select/index.stories.tsx": {
-    "no-console": {
-      "count": 4
-    },
-    "ts/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "web/app/components/base/select/index.tsx": {
-    "react/set-state-in-effect": {
-      "count": 2
-    },
-    "style/multiline-ternary": {
-      "count": 2
     },
     "ts/no-explicit-any": {
       "count": 1
@@ -5429,11 +5405,6 @@
   },
   "web/app/reset-password/layout.tsx": {
     "ts/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "web/app/signin/_header.tsx": {
-    "no-restricted-imports": {
       "count": 1
     }
   },
