@@ -8,6 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@langgenius/dify-ui/tooltip'
+import { RiSettings2Line } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import Divider from '@/app/components/base/divider'
 import Loading from '@/app/components/base/loading'
@@ -62,6 +63,11 @@ type ActionsSectionProps = Pick<AppPublisherProps, | 'hasHumanInputNode'
     disabledFunctionTooltip?: string
     handleEmbed: () => void
     handleOpenInExplore: () => void
+    handleOpenRunConfig?: (url: string) => void
+    handlePublish: (params?: ModelAndParameter | PublishWorkflowParams) => Promise<void>
+    published: boolean
+    showBatchRunConfig?: boolean
+    showRunConfig?: boolean
     workflowToolIsLoading: boolean
     workflowToolOutdated: boolean
     workflowToolIsCurrentWorkspaceManager: boolean
@@ -253,10 +259,13 @@ export const PublisherActionsSection = ({
   disabledFunctionTooltip,
   handleEmbed,
   handleOpenInExplore,
+  handleOpenRunConfig,
   hasHumanInputNode = false,
   hasTriggerNode = false,
   missingStartNode = false,
   publishedAt,
+  showBatchRunConfig = false,
+  showRunConfig = false,
   toolPublished,
   workflowToolAvailable = true,
   workflowToolIsLoading,
@@ -280,6 +289,13 @@ export const PublisherActionsSection = ({
           disabled={disabledFunctionButton}
           link={appURL}
           icon={<span className="i-ri-play-circle-line h-4 w-4" />}
+          actionButton={showRunConfig
+            ? {
+                ariaLabel: t('operation.config', { ns: 'common' }),
+                icon: <RiSettings2Line className="h-4 w-4" />,
+                onClick: () => handleOpenRunConfig?.(appURL),
+              }
+            : undefined}
         >
           {t('common.runApp', { ns: 'workflow' })}
         </SuggestedAction>
@@ -292,6 +308,13 @@ export const PublisherActionsSection = ({
                 disabled={disabledFunctionButton}
                 link={`${appURL}${appURL.includes('?') ? '&' : '?'}mode=batch`}
                 icon={<span className="i-ri-play-list-2-line h-4 w-4" />}
+                actionButton={showBatchRunConfig
+                  ? {
+                      ariaLabel: t('operation.config', { ns: 'common' }),
+                      icon: <RiSettings2Line className="h-4 w-4" />,
+                      onClick: () => handleOpenRunConfig?.(`${appURL}${appURL.includes('?') ? '&' : '?'}mode=batch`),
+                    }
+                  : undefined}
               >
                 {t('common.batchRunApp', { ns: 'workflow' })}
               </SuggestedAction>

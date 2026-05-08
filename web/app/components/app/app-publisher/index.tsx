@@ -1,4 +1,6 @@
+import type { FormEvent } from 'react'
 import type { ModelAndParameter } from '../configuration/debug/types'
+import type { WorkflowHiddenStartVariable, WorkflowLaunchInputValue } from '@/app/components/app/overview/app-card-utils'
 import type { CollaborationUpdate } from '@/app/components/workflow/collaboration/types/collaboration'
 import type { InputVar, Variable } from '@/app/components/workflow/types'
 import type { PublishWorkflowParams } from '@/types/workflow'
@@ -8,6 +10,7 @@ import { toast } from '@langgenius/dify-ui/toast'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useKeyPress } from 'ahooks'
 import {
+
   memo,
   use,
   useCallback,
@@ -16,6 +19,13 @@ import {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
+import { WorkflowLaunchDialog } from '@/app/components/app/overview/app-card-sections'
+import {
+  buildWorkflowLaunchUrl,
+  createWorkflowLaunchInitialValues,
+  isWorkflowLaunchInputSupported,
+
+} from '@/app/components/app/overview/app-card-utils'
 import EmbeddedModal from '@/app/components/app/overview/embedded'
 import { useStore as useAppStore } from '@/app/components/app/store'
 import { trackEvent } from '@/app/components/base/amplitude'
@@ -111,6 +121,9 @@ const AppPublisher = ({
   const [workflowToolDrawerOpen, setWorkflowToolDrawerOpen] = useState(false)
 
   const [embeddingModalOpen, setEmbeddingModalOpen] = useState(false)
+  const [workflowLaunchDialogOpen, setWorkflowLaunchDialogOpen] = useState(false)
+  const [workflowLaunchTargetUrl, setWorkflowLaunchTargetUrl] = useState('')
+  const [workflowLaunchValues, setWorkflowLaunchValues] = useState<Record<string, WorkflowLaunchInputValue>>({})
   const [publishingToMarketplace, setPublishingToMarketplace] = useState(false)
 
   const workflowStore = use(WorkflowContext)
@@ -122,6 +135,22 @@ const AppPublisher = ({
 
   const appURL = getPublisherAppUrl({ appBaseUrl: appBaseURL, accessToken, mode: appDetail?.mode })
   const isChatApp = [AppModeEnum.CHAT, AppModeEnum.AGENT_CHAT, AppModeEnum.COMPLETION].includes(appDetail?.mode || AppModeEnum.CHAT)
+  const hiddenLaunchVariables = useMemo<WorkflowHiddenStartVariable[]>(
+    () => (inputs ?? []).filter(input => input.hide === true),
+    [inputs],
+  )
+  const supportedWorkflowLaunchVariables = useMemo(
+    () => hiddenLaunchVariables.filter(isWorkflowLaunchInputSupported),
+    [hiddenLaunchVariables],
+  )
+  const unsupportedWorkflowLaunchVariables = useMemo(
+    () => hiddenLaunchVariables.filter(variable => !isWorkflowLaunchInputSupported(variable)),
+    [hiddenLaunchVariables],
+  )
+  const initialWorkflowLaunchValues = useMemo(
+    () => createWorkflowLaunchInitialValues(supportedWorkflowLaunchVariables),
+    [supportedWorkflowLaunchVariables],
+  )
 
   const { data: userCanAccessApp, isLoading: isGettingUserCanAccessApp, refetch } = useGetUserCanAccessApp({ appId: appDetail?.id, enabled: false })
   const { data: appAccessSubjects, isLoading: isGettingAppWhiteListSubjects } = useAppWhiteListSubjects(appDetail?.id, open && systemFeatures.webapp_auth.enabled && appDetail?.access_mode === AccessMode.SPECIFIC_GROUPS_MEMBERS)
@@ -231,6 +260,31 @@ const AppPublisher = ({
     }
   }, [appDetail, setAppDetail])
 
+  const handleOpenWorkflowLaunchDialog = useCallback((targetUrl: string) => {
+    setWorkflowLaunchValues(initialWorkflowLaunchValues)
+    setWorkflowLaunchTargetUrl(targetUrl)
+    setWorkflowLaunchDialogOpen(true)
+  }, [initialWorkflowLaunchValues])
+
+  const handleWorkflowLaunchValueChange = useCallback((variable: string, value: WorkflowLaunchInputValue) => {
+    setWorkflowLaunchValues(prev => ({
+      ...prev,
+      [variable]: value,
+    }))
+  }, [])
+
+  const handleWorkflowLaunchConfirm = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const targetUrl = await buildWorkflowLaunchUrl({
+      accessibleUrl: workflowLaunchTargetUrl,
+      variables: supportedWorkflowLaunchVariables,
+      values: workflowLaunchValues,
+    })
+
+    window.open(targetUrl, '_blank')
+    setWorkflowLaunchDialogOpen(false)
+  }, [supportedWorkflowLaunchVariables, workflowLaunchTargetUrl, workflowLaunchValues])
   const handlePublishToMarketplace = useCallback(async () => {
     if (!appDetail?.id || publishingToMarketplace)
       return
@@ -377,10 +431,15 @@ const AppPublisher = ({
                 handleOpenChange(false)
                 handleOpenInExplore()
               }}
+              handleOpenRunConfig={handleOpenWorkflowLaunchDialog}
+              handlePublish={handlePublish}
               hasHumanInputNode={hasHumanInputNode}
               hasTriggerNode={hasTriggerNode}
               missingStartNode={missingStartNode}
+              published={published}
               publishedAt={publishedAt}
+              showBatchRunConfig={hiddenLaunchVariables.length > 0 && (appDetail?.mode === AppModeEnum.WORKFLOW || appDetail?.mode === AppModeEnum.COMPLETION)}
+              showRunConfig={hiddenLaunchVariables.length > 0}
               toolPublished={toolPublished}
               workflowToolAvailable={workflowToolAvailable}
               workflowToolIsLoading={workflowTool.isLoading}
@@ -410,8 +469,19 @@ const AppPublisher = ({
           onClose={() => setEmbeddingModalOpen(false)}
           appBaseUrl={appBaseURL}
           accessToken={accessToken}
+          hiddenInputs={hiddenLaunchVariables}
         />
         {showAppAccessControl && <AccessControl app={appDetail!} onConfirm={handleAccessControlUpdate} onClose={() => { setShowAppAccessControl(false) }} />}
+        <WorkflowLaunchDialog
+          t={t}
+          open={workflowLaunchDialogOpen}
+          hiddenVariables={supportedWorkflowLaunchVariables}
+          unsupportedVariables={unsupportedWorkflowLaunchVariables}
+          values={workflowLaunchValues}
+          onOpenChange={setWorkflowLaunchDialogOpen}
+          onValueChange={handleWorkflowLaunchValueChange}
+          onSubmit={handleWorkflowLaunchConfirm}
+        />
       </Popover>
       {workflowToolDrawerOpen && (
         <WorkflowToolDrawer
