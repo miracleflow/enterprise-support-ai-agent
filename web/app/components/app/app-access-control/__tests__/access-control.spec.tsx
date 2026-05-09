@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-explicit-any */
 import type { AccessControlAccount, AccessControlGroup, Subject } from '@/models/access-control'
 import type { App } from '@/types/app'
 import { toast } from '@langgenius/dify-ui/toast'
@@ -42,34 +41,6 @@ vi.mock('@/service/access-control', () => ({
   useSearchForWhiteListCandidates: (...args: unknown[]) => mockUseSearchForWhiteListCandidates(...args),
   useUpdateAccessMode: () => mockUseUpdateAccessMode(),
 }))
-
-vi.mock('@headlessui/react', () => {
-  const DialogComponent: any = ({ children, className, ...rest }: any) => (
-    <div role="dialog" className={className} {...rest}>{children}</div>
-  )
-  DialogComponent.Panel = ({ children, className, ...rest }: any) => (
-    <div className={className} {...rest}>{children}</div>
-  )
-  const DialogTitle = ({ children, className, ...rest }: any) => (
-    <div className={className} {...rest}>{children}</div>
-  )
-  const DialogDescription = ({ children, className, ...rest }: any) => (
-    <div className={className} {...rest}>{children}</div>
-  )
-  const TransitionChild = ({ children }: any) => (
-    <>{typeof children === 'function' ? children({}) : children}</>
-  )
-  const Transition = ({ show = true, children }: any) => (
-    show ? <>{typeof children === 'function' ? children({}) : children}</> : null
-  )
-  Transition.Child = TransitionChild
-  return {
-    Dialog: DialogComponent,
-    Transition,
-    DialogTitle,
-    Description: DialogDescription,
-  }
-})
 
 vi.mock('ahooks', async (importOriginal) => {
   const actual = await importOriginal<typeof import('ahooks')>()
