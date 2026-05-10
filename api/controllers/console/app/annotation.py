@@ -33,8 +33,6 @@ from services.annotation_service import (
     UpsertAnnotationArgs,
 )
 
-DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
-
 
 class AnnotationReplyPayload(BaseModel):
     score_threshold: float = Field(..., description="Score threshold for annotation matching")
@@ -87,17 +85,6 @@ class AnnotationFilePayload(BaseModel):
         return uuid_value(value)
 
 
-def reg(model: type[BaseModel]) -> None:
-    console_ns.schema_model(model.__name__, model.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0))
-
-
-reg(AnnotationReplyPayload)
-reg(AnnotationSettingUpdatePayload)
-reg(AnnotationListQuery)
-reg(CreateAnnotationPayload)
-reg(UpdateAnnotationPayload)
-reg(AnnotationReplyStatusQuery)
-reg(AnnotationFilePayload)
 register_schema_models(
     console_ns,
     Annotation,
@@ -105,6 +92,13 @@ register_schema_models(
     AnnotationExportList,
     AnnotationHitHistory,
     AnnotationHitHistoryList,
+    AnnotationReplyPayload,
+    AnnotationSettingUpdatePayload,
+    AnnotationListQuery,
+    CreateAnnotationPayload,
+    UpdateAnnotationPayload,
+    AnnotationReplyStatusQuery,
+    AnnotationFilePayload,
 )
 
 
@@ -218,7 +212,7 @@ class AnnotationApi(Resource):
     @account_initialization_required
     @edit_permission_required
     def get(self, app_id):
-        args = AnnotationListQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
+        args = AnnotationListQuery.model_validate(request.args.to_dict(flat=True))
         page = args.page
         limit = args.limit
         keyword = args.keyword
