@@ -3,6 +3,7 @@ import io
 from collections.abc import Callable
 from functools import wraps
 from typing import cast
+from uuid import UUID
 
 from flask import request
 from flask_restx import Resource
@@ -181,7 +182,7 @@ class InsertExploreAppApi(Resource):
     @console_ns.response(204, "App removed successfully")
     @only_edition_cloud
     @admin_required
-    def delete(self, app_id):
+    def delete(self, app_id: UUID):
         with session_factory.create_session() as session:
             recommended_app = session.execute(
                 select(RecommendedApp).where(RecommendedApp.app_id == str(app_id))
@@ -394,11 +395,11 @@ class BatchAddNotificationAccountsApi(Resource):
             raise BadRequest("Invalid file type. Only CSV (.csv) and TXT (.txt) files are allowed.")
 
         try:
-            content = file.read().decode("utf-8")
+            content = file.stream.read().decode("utf-8")
         except UnicodeDecodeError:
             try:
-                file.seek(0)
-                content = file.read().decode("gbk")
+                file.stream.seek(0)
+                content = file.stream.read().decode("gbk")
             except UnicodeDecodeError:
                 raise BadRequest("Unable to decode the file. Please use UTF-8 or GBK encoding.")
 

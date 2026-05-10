@@ -432,7 +432,7 @@ class DocumentAddByFileApi(DatasetApiResource):
             raise ValueError("current_user is required")
         upload_file = FileService(db.engine).upload_file(
             filename=file.filename,
-            content=file.read(),
+            content=file.stream.read(),
             mimetype=file.mimetype,
             user=current_user,
             source="datasets",
@@ -506,7 +506,7 @@ def _update_document_by_file(tenant_id: str, dataset_id: UUID, document_id: UUID
         try:
             upload_file = FileService(db.engine).upload_file(
                 filename=file.filename,
-                content=file.read(),
+                content=file.stream.read(),
                 mimetype=file.mimetype,
                 user=current_user,
                 source="datasets",
